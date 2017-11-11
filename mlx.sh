@@ -22,15 +22,15 @@ function config() {
     INSTALL_DIR=/usr/local/bin
     INSTALL_NAME=mlx
 
-    SYSTEMS="debian9 debian8 centos7 centos6 ubuntu16 ubuntu17 archlinux"
+    SYSTEMS="debian9 debian8 ubuntu17 ubuntu16 centos7 centos6 archlinux"
     debian9=debian:stretch
     debian8=debian:jessie
-    centos7=centos:7
-    centos6=centos:6.9
     ubuntu17=ubuntu:17.10
     ubuntu16=ubuntu:16.04
-    archlinux=base/archlinux
+    centos7=centos:7
+    centos6=centos:6.9
     fedora=fedora
+    archlinux=base/archlinux
     opensuse=opensuse
 }
 

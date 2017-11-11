@@ -22,6 +22,8 @@ Based on Docker, small and fast.
 - Created: 11/5/2017
 - Author: loblab
 
+![Multiple Linux](https://raw.githubusercontent.com/loblab/docker-multi-linux/master/screenshot1.png)
+
 ## Quick start
 
 - You should have docker engine installed. Ref [official guide](https://docs.docker.com/engine/installation/).
@@ -42,6 +44,8 @@ docker attach debian9    # Do something in the systems ...
 mlx restore              # Restore all systems from current images, i.e. 'init' status
 ```
 
+![Run on multiple Linux](https://raw.githubusercontent.com/loblab/docker-multi-linux/master/screenshot2.png)
+
 ## Tips
 
 - You can use you home directory in every container, it auto mounted
@@ -50,6 +54,11 @@ mlx restore              # Restore all systems from current images, i.e. 'init' 
 - mlx se: for short/simple commands, output to screen
 - mlx pe: for time cost jobs, output to log files as running in parallel
 - mlx download: use it only when you need to force update the system images
+
+- mlx se pwd; hostname: 'hostname' exec in host (not container)
+- mlx se "pwd; hostname": 'hostname' exec in containers
+- mlx se echo $PATH: print PATH of host
+- mlx se 'echo $PATH': print PATH of containers
 
 ## History
 
