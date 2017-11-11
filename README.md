@@ -1,13 +1,18 @@
 # Docker based multiple Linux environment
 
 Want to
+
 - learn multiple Linux? 
-- compare the difference between Ubuntu/Debian/CentOS/ArchLinux....?
+- compare the difference between Ubuntu/Debian/CentOS/ArchLinux...?
 - test your programs cross Linux?
-...
-Here is the toolset to 
-- setup/backup/restore multiple Linux systems, 
-- run/test commands/scripts cross Linux.
+- ...
+
+Here is a toolset to
+
+- setup multiple Linux systems in 1 command,
+- backup/restore in 1 command,
+- run/test commands/scripts cross Linux in 1 command.
+
 Based on Docker, small and fast.
 
 - Platform: Linux/Mac with Docker engine
@@ -36,6 +41,15 @@ docker attach debian9    # Do something in the systems ...
 <Ctrl-P>, <Ctrl-Q>       # Quit a container, don't use 'exit'
 mlx restore              # Restore all systems from current images, i.e. 'init' status
 ```
+
+## Tips
+
+- You can use you home directory in every container, it auto mounted
+- Working directory in containers is current directory in host
+- If you 'exited' a container, the container will stop, you have to start it again, e.g. docker start debian9
+- mlx se: for short/simple commands, output to screen
+- mlx pe: for time cost jobs, output to log files as running in parallel
+- mlx download: use it only when you need to force update the system images
 
 ## History
 
