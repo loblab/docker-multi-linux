@@ -18,7 +18,7 @@ set -e
 function config() {
     LOG_DIR=$HOME/docker/log
     BACKUP_DIR=$HOME/docker/backup
-    INIT_SCRIPT=container/init.sh
+    INIT_SCRIPT="container/init.sh $USER"
     INSTALL_DIR=/usr/local/bin
     INSTALL_NAME=mlx
 
@@ -38,18 +38,21 @@ function help() {
     echo ""
     echo "Docker based multiple Linux environment"
     echo "======================================="
-    echo "Ver 0.2, 11/11/2017, loblab"
+    echo "Ver 0.3, 11/13/2017, loblab"
     echo ""
     echo "Usage:"
-    echo "$prog se <command...> - Sequence exec <command...> on all linux systems"
-    echo "$prog pe <command...> - Parallel exec <command...> on all linux systems. Output to log files"
-    echo "$prog logs - Quick look logs of '$prog pe'"
-    echo "$prog init [command...] - Init the environment. Default command is '$INIT_SCRIPT'"
-    echo "$prog backup <backup-dir> - Backup all the systems to $BACKUP_DIR/<backup-dir>"
-    echo "$prog restore [backup-dir] - Restore all the systems from $BACKUP_DIR/<backup-dir> or backup images"
-    echo "$prog download - Download/update the docker images"
-    echo "$prog install [install-dir] - Install this script, default to '$INSTALL_DIR'"
-    echo "$prog help - Help message"
+    echo "$PROG se <command...>       - Sequence exec <command...> on all linux systems"
+    echo "$PROG pe <command...>       - Parallel exec <command...> on all linux systems. Output to log files"
+    echo "$PROG seu <command...>      - 'se' as normal user (instead of 'root')"
+    echo "$PROG peu <command...>      - 'pe' as normal user (instead of 'root')"
+    echo "$PROG logs                  - Quick look logs of '$PROG pe'"
+    echo "$PROG init [command...]     - Init the environment. Default command is '$INIT_SCRIPT'"
+    echo "$PROG backup <backup-dir>   - Backup all the systems to $BACKUP_DIR/<backup-dir>"
+    echo "$PROG restore [backup-dir]  - Restore all the systems from $BACKUP_DIR/<backup-dir> or backup images"
+    echo "$PROG download              - Download/update the docker images"
+    echo "$PROG install [install-dir] - Install this script, default to '$INSTALL_DIR'"
+    echo "$PROG list                  - List systems"
+    echo "$PROG help                  - Help message"
     echo ""
     exit $1
 }
@@ -150,8 +153,7 @@ function add_user_containers() {
     local homedir=$HOME
     if [ "$USER" != "root" ]; then
         log_msg "Add user '$USER' to all systems..."
-        seq_exec_containers useradd -u $uid -d $homedir $USER
-        #seq_exec_containers usermod -aG sudo $USER || usermod -aG wheel $USER
+        seq_exec_containers useradd -u $uid -d $homedir -s $SHELL $USER
     fi
 }
 
@@ -164,7 +166,7 @@ function seq_exec_containers() {
     do
         echo $sys
         echo "==================="
-        docker exec -it $sys bash -c "cd $workdir; $cmd"
+        docker exec -it $AS_USER $sys bash -c "cd $workdir; $cmd"
         local rc=$?
         echo "-----"
         echo "Exit: $rc ($sys)"
@@ -180,7 +182,7 @@ function par_exec_containers() {
     for sys in $SYSTEMS
     do
         log_msg "Exec in '$sys': '$cmd' ..."
-        docker exec $sys bash -c "cd $workdir; $cmd" &> $LOG_DIR/$sys.log &
+        docker exec $AS_USER $sys bash -c "cd $workdir; $cmd" &> $LOG_DIR/$sys.log &
     done
 }
 
@@ -255,7 +257,7 @@ function mlx_init() {
     fi
     log_msg "Run '$cmd' in all systems..."
     par_exec_containers $cmd
-    echo "Check status with '$prog logs'"
+    echo "Check status with '$PROG logs'"
 }
 
 function mlx_se() {
@@ -266,7 +268,22 @@ function mlx_se() {
 function mlx_pe() {
     test -n "$1" || help 255
     par_exec_containers $*
-    echo "Check exec logs with '$prog logs'"
+    echo "Check exec logs with '$PROG logs'"
+}
+
+function mlx_seu() {
+    test -n "$1" || help 255
+    [ "$USER" != "root" ] || { echo "'seu' should run as normal user. Quit."; exit 249; }
+    AS_USER="-u $USER"
+    seq_exec_containers $*
+}
+
+function mlx_peu() {
+    test -n "$1" || help 255
+    [ "$USER" != "root" ] || { echo "'peu' should run as normal user. Quit."; exit 248; }
+    AS_USER="-u $USER"
+    par_exec_containers $*
+    echo "Check exec logs with '$PROG logs'"
 }
 
 function mlx_backup() {
@@ -293,11 +310,11 @@ function mlx_help() {
     help 0
 }
 
-config
-prog=$(basename $0)
-operation=$1
 test -n "$USER" || USER=$(whoami)
 [ "$USER" == "root" ]  || SUDO=sudo
+config
+PROG=$(basename $0)
+operation=$1
 
 [ "$(type -t mlx_$operation)" = function ] || help 255
 shift

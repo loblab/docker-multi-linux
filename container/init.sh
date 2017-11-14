@@ -1,5 +1,7 @@
 #!/bin/bash
 
+USER=$1
+
 APT_MIRROR=mirrors.aliyun.com
 
 function check_pm() {
@@ -41,12 +43,23 @@ function pacman_init() {
     $PMI lsb-release
 }
 
+function init_sudo() {
+    test -n "$USER" || return 0
+    [ "$USER" != "root" ] || return 0
+    echo "Add user '$USER' to 'sudo/wheel' group..."
+    usermod -aG sudo $USER &> /dev/null || usermod -aG wheel $USER &> /dev/null
+    local line="$USER ALL=(ALL) NOPASSWD:ALL"
+    grep "$line" /etc/sudoers > /dev/null || echo "$line" >> /etc/sudoers
+    echo "User '$USER' can run sudo any commands without password."
+}
+
 function common_init() {
     $PMI man sudo wget tree
     $PMI vim
     echo "Copy xpm.sh, and rename to xpm..."
     cp $(dirname $0)/xpm.sh /usr/local/bin/xpm
     echo "You can use xpm as package manager across linux distributions"
+    init_sudo
 }
 
 function show_env() {

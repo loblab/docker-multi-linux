@@ -55,6 +55,13 @@ mlx restore              # Restore all systems from current images, i.e. 'init' 
 - mlx pe: for time cost jobs, output to log files as running in parallel
 - mlx download: use it only when you need to force update the system images
 
+User and sudo:
+
+- mlx seu whoami: exec as normal user (not root)
+- mlx seu sudo whoami: the normal user can sudo without password
+
+Quotation marks: 
+
 - mlx se pwd; hostname: 'hostname' exec in host (not container)
 - mlx se "pwd; hostname": 'hostname' exec in containers
 - mlx se echo $PATH: print PATH of host
@@ -62,6 +69,7 @@ mlx restore              # Restore all systems from current images, i.e. 'init' 
 
 ## History
 
+- 0.3 (11/13/2017): New features: exec as normal user (seu, peu); and sudo without password
 - 0.2 (11/11/2017): Rewrite to one script: 'mlx.sh'; add 'xpm' tool in container; many improvements
 - 0.1 (11/8/2017) : Support basic functions: init, backup, restore
 
