@@ -50,7 +50,7 @@ function init_sudo() {
     usermod -aG sudo $USER &> /dev/null || usermod -aG wheel $USER &> /dev/null
     local line="$USER ALL=(ALL) NOPASSWD:ALL"
     grep "$line" /etc/sudoers > /dev/null || echo "$line" >> /etc/sudoers
-    echo "User '$USER' can run sudo any commands without password."
+    echo "User '$USER' can sudo any commands without password."
 }
 
 function common_init() {

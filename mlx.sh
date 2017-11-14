@@ -38,20 +38,22 @@ function help() {
     echo ""
     echo "Docker based multiple Linux environment"
     echo "======================================="
-    echo "Ver 0.3, 11/13/2017, loblab"
+    echo "Ver 0.3, 11/14/2017, loblab"
     echo ""
     echo "Usage:"
-    echo "$PROG se <command...>       - Sequence exec <command...> on all linux systems"
-    echo "$PROG pe <command...>       - Parallel exec <command...> on all linux systems. Output to log files"
+    echo "$PROG se <command...>       - Sequence exec <command...> on all systems"
+    echo "$PROG pe <command...>       - Parallel exec <command...> on all systems. Output to log files"
     echo "$PROG seu <command...>      - 'se' as normal user (instead of 'root')"
     echo "$PROG peu <command...>      - 'pe' as normal user (instead of 'root')"
     echo "$PROG logs                  - Quick look logs of '$PROG pe'"
     echo "$PROG init [command...]     - Init the environment. Default command is '$INIT_SCRIPT'"
     echo "$PROG backup <backup-dir>   - Backup all the systems to $BACKUP_DIR/<backup-dir>"
     echo "$PROG restore [backup-dir]  - Restore all the systems from $BACKUP_DIR/<backup-dir> or backup images"
+    echo "$PROG list                  - List all systems"
+    echo "$PROG start                 - Start all systems"
+    echo "$PROG stop                  - Stop all systems"
     echo "$PROG download              - Download/update the docker images"
     echo "$PROG install [install-dir] - Install this script, default to '$INSTALL_DIR'"
-    echo "$PROG list                  - List systems"
     echo "$PROG help                  - Help message"
     echo ""
     exit $1
@@ -148,7 +150,7 @@ function create_containers() {
     done
 }
 
-function add_user_containers() {
+function add_user_to_containers() {
     local uid=$(id -u $USER)
     local homedir=$HOME
     if [ "$USER" != "root" ]; then
@@ -183,6 +185,15 @@ function par_exec_containers() {
     do
         log_msg "Exec in '$sys': '$cmd' ..."
         docker exec $AS_USER $sys bash -c "cd $workdir; $cmd" &> $LOG_DIR/$sys.log &
+    done
+}
+
+function operate_containers() {
+    local operate=$1
+    local sys
+    for sys in $SYSTEMS
+    do
+        docker $operate $sys
     done
 }
 
@@ -225,7 +236,7 @@ function restore_containers() {
                 exit 251
             fi
         fi
-        echo "Start container '$sys'..."
+        echo "Start system '$sys'..."
         docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $image /bin/bash
     done
 }
@@ -237,7 +248,7 @@ function mlx_install() {
 }
 
 function mlx_list() {
-    echo "All systems"
+    echo "All systems:"
     list_systems
 }
 
@@ -250,7 +261,7 @@ function mlx_init() {
     check_docker_engine
     echo "Create/init all systems..."
     create_containers
-    add_user_containers
+    add_user_to_containers
     local cmd=$INIT_SCRIPT
     if [ -n "$1" ]; then
         cmd=$*
@@ -286,14 +297,24 @@ function mlx_peu() {
     echo "Check exec logs with '$PROG logs'"
 }
 
+function mlx_start() {
+    echo "Start all systems..."
+    operate_containers start
+}
+
+function mlx_stop() {
+    echo "Stop all systems..."
+    operate_containers stop
+}
+
 function mlx_backup() {
     test -n "$1" || help 255 
-    echo "Backup all containers..."
+    echo "Backup all systems..."
     backup_containers $1
 }
 
 function mlx_restore() {
-    echo "Restore all containers..."
+    echo "Restore all systems..."
     restore_containers $1
 }
 

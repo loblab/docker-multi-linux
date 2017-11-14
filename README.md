@@ -17,8 +17,8 @@ Based on Docker, small and fast.
 
 - Platform: Linux/Mac with Docker engine
 - Tested: Debian 9.2, macOS Sierra 10.12.6, Docker 17.09.0-ce
-- Ver: 0.2
-- Updated: 11/11/2017
+- Ver: 0.3
+- Updated: 11/14/2017
 - Created: 11/5/2017
 - Author: loblab
 
