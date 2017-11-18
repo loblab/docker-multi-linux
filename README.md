@@ -17,8 +17,8 @@ Based on Docker, small and fast.
 
 - Platform: Linux/Mac with Docker engine
 - Tested: Debian 9.2, macOS Sierra 10.12.6, Docker 17.09.0-ce
-- Ver: 0.3
-- Updated: 11/14/2017
+- Ver: 0.4
+- Updated: 11/18/2017
 - Created: 11/5/2017
 - Author: loblab
 
@@ -69,6 +69,7 @@ Quotation marks:
 
 ## History
 
+- 0.4 (11/17/2017): Extra options (e.g. publish ports) in init/restore. See config().
 - 0.3 (11/13/2017): New features: exec as normal user (seu, peu); and sudo without password
 - 0.2 (11/11/2017): Rewrite to one script: 'mlx.sh'; add 'xpm' tool in container; many improvements
 - 0.1 (11/8/2017) : Support basic functions: init, backup, restore

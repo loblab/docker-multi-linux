@@ -23,22 +23,22 @@ function config() {
     INSTALL_NAME=mlx
 
     SYSTEMS="debian9 debian8 ubuntu17 ubuntu16 centos7 centos6 archlinux"
-    debian9=debian:stretch
-    debian8=debian:jessie
-    ubuntu17=ubuntu:17.10
-    ubuntu16=ubuntu:16.04
-    centos7=centos:7
-    centos6=centos:6.9
-    fedora=fedora
-    archlinux=base/archlinux
-    opensuse=opensuse
+    debian9="debian:stretch   -p 221:22 -p 801:80"
+    debian8="debian:jessie    -p 222:22 -p 802:80"
+    ubuntu17="ubuntu:17.10    -p 223:22 -p 803:80"
+    ubuntu16="ubuntu:16.04    -p 224:22 -p 804:80"
+    centos7="centos:7         -p 225:22 -p 805:80"
+    centos6="centos:6.9       -p 226:22 -p 806:80"
+    archlinux="base/archlinux -p 227:22 -p 807:80"
+    fedora="fedora"
+    opensuse="opensuse"
 }
 
 function help() {
     echo ""
     echo "Docker based multiple Linux environment"
     echo "======================================="
-    echo "Ver 0.3, 11/14/2017, loblab"
+    echo "Ver 0.4, 11/18/2017, loblab"
     echo ""
     echo "Usage:"
     echo "$PROG se <command...>       - Sequence exec <command...> on all systems"
@@ -61,6 +61,18 @@ function help() {
 
 function log_msg() {
     echo $(date +'%m/%d %H:%M:%S') - "$*"
+}
+
+function get_sys_image() {
+    local sys=$1
+    local cfg=${!sys}
+    echo "$cfg" | awk '{ print $1 }'
+}
+
+function get_sys_option() {
+    local sys=$1
+    local cfg=${!sys}
+    echo "$cfg" | perl -ne 'print $2 if /(\S+?) (.*)/'
 }
 
 function install_script() {
@@ -123,7 +135,7 @@ function download_images() {
     for sys in $SYSTEMS
     do
         log_msg "Download '$sys'..."
-        local image=${!sys}
+        local image=$(get_sys_image $sys)
         docker pull $image
     done
 }
@@ -132,8 +144,9 @@ function list_systems() {
     local sys
     for sys in $SYSTEMS
     do
-        local image=${!sys}
-        echo "$sys => $image"
+        local image=$(get_sys_image $sys)
+        local option=$(get_sys_option $sys)
+        echo "$sys => $image $option"
     done
 }
 
@@ -145,8 +158,9 @@ function create_containers() {
     do
         log_msg "Create '$sys'..."
         remove_existed_container $sys
-        local image=${!sys}
-        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $image
+        local image=$(get_sys_image $sys)
+        local option=$(get_sys_option $sys)
+        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $option $image
     done
 }
 
@@ -237,7 +251,8 @@ function restore_containers() {
             fi
         fi
         echo "Start system '$sys'..."
-        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $image /bin/bash
+        local option=$(get_sys_option $sys)
+        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $option $image /bin/bash
     done
 }
 
