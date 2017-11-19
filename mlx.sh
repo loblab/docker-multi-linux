@@ -22,7 +22,7 @@ function config() {
     INSTALL_DIR=/usr/local/bin
     INSTALL_NAME=mlx
 
-    SYSTEMS="debian9 debian8 ubuntu17 ubuntu16 centos7 centos6 archlinux"
+    SYSTEMS="debian9 debian8 ubuntu17 ubuntu16 centos7 centos6 archlinux alpine"
     debian9="debian:stretch   -p 221:22 -p 801:80"
     debian8="debian:jessie    -p 222:22 -p 802:80"
     ubuntu17="ubuntu:17.10    -p 223:22 -p 803:80"
@@ -30,6 +30,7 @@ function config() {
     centos7="centos:7         -p 225:22 -p 805:80"
     centos6="centos:6.9       -p 226:22 -p 806:80"
     archlinux="base/archlinux -p 227:22 -p 807:80"
+    alpine="alpine            -p 228:22 -p 808:80"
     fedora="fedora"
     opensuse="opensuse"
 }
@@ -38,7 +39,7 @@ function help() {
     echo ""
     echo "Docker based multiple Linux environment"
     echo "======================================="
-    echo "Ver 0.4, 11/18/2017, loblab"
+    echo "Ver 0.5, 11/19/2017, loblab"
     echo ""
     echo "Usage:"
     echo "$PROG se <command...>       - Sequence exec <command...> on all systems"
@@ -94,7 +95,7 @@ function install_script() {
 
 function check_docker_engine() {
     set +e
-    which docker &> /dev/null
+    which docker > /dev/null 2>&1
     set -e
     if [ $? -ne 0 ]; then
         echo "Docker engine is not installed."
@@ -125,7 +126,7 @@ function remove_existed_image() {
 function remove_existed_container() {
     local con=$1
     if container_existed $con; then
-        echo "Container '$con' existed. remove..."
+        echo "System '$con' existed. remove..."
         docker rm -f $con
     fi
 }
@@ -134,7 +135,7 @@ function download_images() {
     local sys
     for sys in $SYSTEMS
     do
-        log_msg "Download '$sys'..."
+        log_msg "Download image '$sys'..."
         local image=$(get_sys_image $sys)
         docker pull $image
     done
@@ -156,7 +157,7 @@ function create_containers() {
     local sys
     for sys in $SYSTEMS
     do
-        log_msg "Create '$sys'..."
+        log_msg "Create system '$sys'..."
         remove_existed_container $sys
         local image=$(get_sys_image $sys)
         local option=$(get_sys_option $sys)
@@ -167,10 +168,13 @@ function create_containers() {
 function add_user_to_containers() {
     local uid=$(id -u $USER)
     local homedir=$HOME
-    if [ "$USER" != "root" ]; then
-        log_msg "Add user '$USER' to all systems..."
-        seq_exec_containers useradd -u $uid -d $homedir -s $SHELL $USER
-    fi
+    [ "$USER" != "root" ] || return
+    for sys in $SYSTEMS
+    do
+        log_msg "Add user '$USER' to '$sys'..."
+        docker exec -it $sys useradd -u $uid -d $homedir -s $SHELL $USER > /dev/null 2>&1 || 
+          docker exec -it $sys adduser -u $uid -h $homedir -s $SHELL -D $USER > /dev/null 2>&1
+    done
 }
 
 function seq_exec_containers() {
@@ -182,7 +186,7 @@ function seq_exec_containers() {
     do
         echo $sys
         echo "==================="
-        docker exec -it $AS_USER $sys bash -c "cd $workdir; $cmd"
+        docker exec -it $AS_USER $sys sh -c "cd $workdir; $cmd"
         local rc=$?
         echo "-----"
         echo "Exit: $rc ($sys)"
@@ -198,7 +202,7 @@ function par_exec_containers() {
     for sys in $SYSTEMS
     do
         log_msg "Exec in '$sys': '$cmd' ..."
-        docker exec $AS_USER $sys bash -c "cd $workdir; $cmd" &> $LOG_DIR/$sys.log &
+        docker exec $AS_USER $sys sh -c "cd $workdir; $cmd" > $LOG_DIR/$sys.log 2>&1 &
     done
 }
 
@@ -252,7 +256,7 @@ function restore_containers() {
         fi
         echo "Start system '$sys'..."
         local option=$(get_sys_option $sys)
-        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $option $image /bin/bash
+        docker run -dit --name $sys -h $sys -v $rootdir:$rootdir -w $workdir $option $image sh
     done
 }
 
